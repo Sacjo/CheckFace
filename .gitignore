@@ -1,0 +1,15 @@
+# Entorno virtual
+venv/
+__pycache__/
+*.pyc
+
+# Configuración local
+.env
+
+# Datos del sistema (imágenes temporales)
+data/
+!data/.gitkeep  # Si querés dejar la carpeta vacía en Git
+
+# Pesos de modelos grandes
+**/model-weights/*.weights
+**/model-weights/*.h5
