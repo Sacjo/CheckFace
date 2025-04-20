@@ -4,3 +4,4 @@ ultralytics
 opencv-python
 deepface
 tensorflow-cpu==2.13.0
+omegaconf

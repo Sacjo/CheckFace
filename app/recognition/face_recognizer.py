@@ -22,7 +22,7 @@ def recognize_face_embedding(cropped_face):
         cv2.imwrite(temp_path, cropped_face)
 
         # Obtener el embedding del rostro recortado
-        rep = DeepFace.represent(img_path=temp_path, model_name="Facenet", enforce_detection=False)[0]["embedding"]
+        rep = DeepFace.represent(img_path=temp_path, model_name="ArcFace", enforce_detection=False)[0]["embedding"]
 
         # Eliminar el archivo temporal
         os.remove(temp_path)
@@ -34,7 +34,7 @@ def recognize_face_embedding(cropped_face):
         for entry in embeddings:
             db_vec = np.array(entry["embedding"])
             dist = np.linalg.norm(np.array(rep) - db_vec)
-            if dist < min_dist and dist < 8.5:  # umbral de similitud
+            if dist < min_dist and dist < 60:  # umbral de similitud
                 min_dist = dist
                 identity = entry["name"]
 

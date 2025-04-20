@@ -49,11 +49,14 @@ def recortar_y_guardar():
 def generar_embeddings():
     print("🧬 Generando embeddings con DeepFace...")
     embeddings = []
+    resumen_por_persona = {}
 
     for person in os.listdir(PROCESSED_DIR):
         person_path = os.path.join(PROCESSED_DIR, person)
         if not os.path.isdir(person_path):
             continue
+
+        person_embeddings = []
 
         for file in os.listdir(person_path):
             if not file.lower().endswith((".jpg", ".png")):
@@ -61,18 +64,43 @@ def generar_embeddings():
 
             try:
                 img_path = os.path.join(person_path, file)
-                result = DeepFace.represent(img_path=img_path, model_name="Facenet", enforce_detection=False)[0]
+                result = DeepFace.represent(img_path=img_path, model_name="ArcFace", enforce_detection=False)[0]
                 embeddings.append({
                     "name": person,
                     "embedding": result["embedding"]
                 })
+                person_embeddings.append(result["embedding"])
                 print(f"🧠 Embedding generado: {person}/{file}")
             except Exception as e:
                 print(f"⚠️ Error en {file}: {e}")
 
+        # Guardar resumen por persona
+        resumen_por_persona[person] = {
+            "count": len(person_embeddings),
+            "distance_avg": calcular_distancia_promedio(person_embeddings)
+        }
+
     with open(EMBEDDING_PATH, "w") as f:
         json.dump(embeddings, f)
-    print(f"📦 Embeddings guardados en {EMBEDDING_PATH}")
+
+    print(f"\n📦 Embeddings guardados en {EMBEDDING_PATH}\n")
+    print("📊 Resumen por persona:")
+    for person, data in resumen_por_persona.items():
+        print(f"🧍 {person}: {data['count']} embeddings - dist. promedio interna: {data['distance_avg']:.2f}")
+
+
+def calcular_distancia_promedio(embeddings_list):
+    if len(embeddings_list) < 2:
+        return 0.0
+    distancias = []
+    for i in range(len(embeddings_list)):
+        for j in range(i + 1, len(embeddings_list)):
+            a = np.array(embeddings_list[i])
+            b = np.array(embeddings_list[j])
+            dist = np.linalg.norm(a - b)
+            distancias.append(dist)
+    return np.mean(distancias) if distancias else 0.0
+
 
 def entrenar():
     recortar_y_guardar()
@@ -80,3 +108,6 @@ def entrenar():
 
 if __name__ == "__main__":
     entrenar()
+
+
+
