@@ -14,5 +14,8 @@ data/
 **/model-weights/*.weights
 **/model-weights/*.h5
 
+raw_faces
+known_faces
+embeddings.json
 
 .diff
