@@ -13,3 +13,6 @@ data/
 # Pesos de modelos grandes
 **/model-weights/*.weights
 **/model-weights/*.h5
+
+
+.diff
