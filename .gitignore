@@ -9,7 +9,7 @@ __pycache__/
 # Datos del sistema (imágenes temporales)
 data/
 !data/.gitkeep  # Si querés dejar la carpeta vacía en Git
-
+.vscode/settings.json
 # Pesos de modelos grandes
 **/model-weights/*.weights
 **/model-weights/*.h5
