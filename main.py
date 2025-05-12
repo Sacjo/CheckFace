@@ -4,7 +4,7 @@ import cv2
 
 print("🚀 Iniciando CheckFace: detección + reconocimiento en tiempo real...")
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 if not cap.isOpened():
     print("❌ No se pudo abrir la cámara.")
@@ -23,11 +23,14 @@ while True:
         face_crop = frame[y:y+h, x:x+w]
 
         # Reconocer quién es
-        name = recognize_face_embedding(face_crop)
+        name, similarity = recognize_face_embedding(face_crop)
+
+        label = f"{name} ({similarity:.1f}%)"
+
 
         # Dibujar el resultado
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(frame, name, (x, y - 10),
+        cv2.putText(frame, label, (x, y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
     cv2.imshow("CheckFace - Reconocimiento en tiempo real", frame)

@@ -34,12 +34,20 @@ def recognize_face_embedding(cropped_face):
         for entry in embeddings:
             db_vec = np.array(entry["embedding"])
             dist = np.linalg.norm(np.array(rep) - db_vec)
-            if dist < min_dist and dist < 60:  # umbral de similitud
+            if dist < min_dist:
                 min_dist = dist
                 identity = entry["name"]
 
-        return identity
+        #Convierte la distancia (min_dist) en un número que se parezca a un porcentaje de similitud.
+        similarity = max(0, 100 - min_dist * 18)  # (18) mientras mas bajos son los valores mas similares son los rostros
+
+        # Umbral: Aunque el rostro se parezca, si la distancia es demasiado alta, mejor no me arriesgo y digo que es ‘Desconocido’.
+        if min_dist > 3.5:  # Si supera el umbral, se considera desconocido
+            identity = "Desconocido"
+            similarity = 0
+
+        return identity, similarity
 
     except Exception as e:
         print("⚠️ Error en reconocimiento:", e)
-        return "Desconocido"
+        return "Desconocido", 0

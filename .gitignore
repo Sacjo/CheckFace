@@ -19,3 +19,4 @@ known_faces
 embeddings.json
 
 .diff
+.DS_Store

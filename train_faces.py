@@ -24,6 +24,10 @@ def recortar_y_guardar():
     for person in os.listdir(RAW_DIR):
         raw_path = os.path.join(RAW_DIR, person)
         processed_path = os.path.join(PROCESSED_DIR, person)
+        
+        if not os.path.isdir(raw_path):
+            continue 
+        
         os.makedirs(processed_path, exist_ok=True)
 
         for file in os.listdir(raw_path):

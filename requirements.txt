@@ -3,5 +3,8 @@ numpy
 ultralytics
 opencv-python
 deepface
-tensorflow-cpu==2.13.0
+# para windows
+# tensorflow-cpu==2.13.0
+# para mac
+tensorflow-macos==2.13.0
 omegaconf
