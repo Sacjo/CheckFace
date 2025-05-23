@@ -1,5 +1,5 @@
 // ----------------------
-// Fecha y hora en la cabecera (misma línea, formato hh:mm a. m. dd/MM/yyyy)
+// Fecha y hora en la cabecera (misma línea, formato hh:mm dd/MM/yyyy)
 // ----------------------
 const nowEl = document.getElementById('currentDateTime');
 function updateDateTime() {
@@ -18,6 +18,7 @@ const video           = document.getElementById('video');
 const snapshot        = document.getElementById('snapshot');
 const startBtn        = document.getElementById('startBtn');
 const stopBtn         = document.getElementById('stopBtn');
+const reportBtn       = document.getElementById('reportBtn');
 const timerEl         = document.getElementById('timer');
 const attendanceTable = document.getElementById('attendanceTable');
 const unrecList       = document.getElementById('unrecognizedList');
@@ -56,14 +57,11 @@ function stopRecognition() {
   recognizing = false;
   clearInterval(interval);
 
-  startBtn.disabled = false;
-  stopBtn.disabled  = true;
+  // Restablecer botones y temporizador
+  startBtn.disabled  = false;
+  stopBtn.disabled   = true;
+  reportBtn.disabled = false;
   timerEl.textContent = '';
-
-  attendanceTable.innerHTML = '';
-  unrecList.innerHTML       = '';
-
-  fetch('/api/reset', { method: 'POST' }).catch(console.error);
 }
 
 // ----------------------
@@ -110,12 +108,24 @@ function renderLists(data) {
 // ----------------------
 // Eventos de usuario
 // ----------------------
-startBtn.addEventListener('click', () => {
-  startBtn.disabled = true;
-  stopBtn.disabled  = false;
-  recognizing       = true;
-  endTime           = Date.now() + 60 * 1000;
+startBtn.addEventListener('click', async () => {
+  // Deshabilitar controles y limpiar datos previos
+  startBtn.disabled   = true;
+  stopBtn.disabled    = false;
+  reportBtn.disabled  = true;
+  recognizing          = true;
+  endTime              = Date.now() + 60 * 1000;
 
+  // Resetear datos en servidor y UI al iniciar nueva sesión
+  try {
+    await fetch('/api/reset', { method: 'POST' });
+    attendanceTable.innerHTML = '';
+    unrecList.innerHTML       = '';
+  } catch (e) {
+    console.error('Error al resetear datos:', e);
+  }
+
+  // Iniciar bucle de captura
   interval = setInterval(async () => {
     if (!recognizing || Date.now() >= endTime) {
       stopRecognition();
@@ -132,11 +142,17 @@ startBtn.addEventListener('click', () => {
 
 stopBtn.addEventListener('click', stopRecognition);
 
+// Descargar reporte
+reportBtn.addEventListener('click', () => {
+  window.location.href = '/export';
+});
+
 // ----------------------
 // Arranque
 // ----------------------
 window.addEventListener('DOMContentLoaded', () => {
-  startBtn.disabled = true;
-  stopBtn.disabled  = true;
+  startBtn.disabled  = true;
+  stopBtn.disabled   = true;
+  reportBtn.disabled = true;
   initCamera();
 });

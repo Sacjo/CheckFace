@@ -1,8 +1,9 @@
 import io, time, threading
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, send_file
 from PIL import Image
 import numpy as np
 import cv2
+from openpyxl import Workbook
 from app.detection.yoloface import detect_faces
 from app.recognition.face_recognizer import recognize_face_embedding
 
@@ -21,7 +22,7 @@ def index():
 def api_recognize():
     """
     Recibe un JPEG en el body, devuelve JSON:
-      { recognized: [ (name, time) ], unrecognized: [ name ] }
+      { results: [ {name, time} ], attendance: [], unrecognized: [] }
     """
     data = request.data
     img = Image.open(io.BytesIO(data)).convert('RGB')
@@ -45,11 +46,13 @@ def api_recognize():
                    attendance=attendance,
                    unrecognized=list(unrecognized))
 
-@main.route('/logout')
-def logout():
-    # tu lógica de sesión
-    return ('', 204)
-
+@main.route('/api/attendance', methods=['GET'])
+def api_attendance():
+    """
+    Devuelve los registros actuales de asistencia y no reconocidos.
+    """
+    return jsonify(attendance=attendance,
+                   unrecognized=list(unrecognized))
 
 @main.route('/api/reset', methods=['POST'])
 def api_reset():
@@ -59,3 +62,32 @@ def api_reset():
         unrecognized.clear()
     return jsonify(success=True)
 
+@main.route('/export')
+def export_report():
+    """Genera un archivo XLSX con los resultados actuales de asistencia."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Asistencia"
+    # Cabecera
+    ws.append(["Alumno", "Hora", "Estado"])
+    # Filas de asistencia
+    for name, ts in attendance:
+        ws.append([name, ts, "✔️"])
+    # Filas de no reconocidos
+    for name in unrecognized:
+        ws.append([name, "", "Anonimo"])
+    # Serializar a bytes
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+    return send_file(
+        stream,
+        as_attachment=True,
+        download_name="reporte_asistencia.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+@main.route('/logout')
+def logout():
+    # lógica de cerrar sesión o redirección a login
+    return ('', 204)
