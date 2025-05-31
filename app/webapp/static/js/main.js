@@ -89,18 +89,24 @@ async function sendFrame() {
 // Renderizar listas
 // ----------------------
 function renderLists(data) {
+  // 1) Limpiar ambas vistas
   attendanceTable.innerHTML = '';
-  data.attendance.forEach(([name, hour]) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${name}</td><td>${hour}</td><td>✔️</td>`;
-    attendanceTable.appendChild(tr);
-  });
+  unrecList.innerHTML       = '';
 
-  unrecList.innerHTML = '';
-  data.unrecognized.forEach(name => {
+  // 2) Tabla de asistencias: solo los reconocidos (no 'Unknown')
+  data.attendance
+    .filter(([name]) => name && name !== 'Unknown')
+    .forEach(([name, hour]) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${name}</td><td>${hour}</td><td>✔️</td>`;
+      attendanceTable.appendChild(tr);
+    });
+
+  // 3) Lista de no reconocidos: cada entrada en data.unrecognized → 'Desconocido'
+  data.unrecognized.forEach(() => {
     const li = document.createElement('li');
     li.className = 'list-group-item';
-    li.textContent = name;
+    li.textContent = 'Desconocido';
     unrecList.appendChild(li);
   });
 }
