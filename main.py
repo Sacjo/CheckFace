@@ -1,10 +1,10 @@
-from app.detection.yoloface import detect_faces
-from app.recognition.face_recognizer import recognize_face_embedding
+from backend.app.detection.yoloface import detect_faces
+from backend.app.recognition.face_recognizer import recognize_face_embedding
 import cv2
 
 print("🚀 Iniciando CheckFace: detección + reconocimiento en tiempo real...")
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 if not cap.isOpened():
     print("❌ No se pudo abrir la cámara.")

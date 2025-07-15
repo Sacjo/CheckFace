@@ -1,13 +1,13 @@
-from app.detection.yoloface import detect_faces
+from backend.app.detection.yoloface import detect_faces
 from deepface import DeepFace
 import cv2
 import os
 import numpy as np
 import json
 
-RAW_DIR = "app/recognition/raw_faces"
-PROCESSED_DIR = "app/recognition/known_faces"
-EMBEDDING_PATH = "app/recognition/embeddings.json"
+RAW_DIR = "backend/app/recognition/raw_faces"
+PROCESSED_DIR = "backend/app/recognition/known_faces"
+EMBEDDING_PATH = "backend/app/recognition/embeddings.json"
 
 def recortar_y_guardar():
     print("🧼 Limpiando rostros anteriores en known_faces/...")

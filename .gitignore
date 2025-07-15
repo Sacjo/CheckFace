@@ -1,22 +1,49 @@
-# Entorno virtual
+# --- ENTORNOS Y ARCHIVOS TEMPORALES PYTHON ---
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Configuración local
+# --- VARIABLES DE ENTORNO Y CONFIGURACIONES SENSIBLES ---
 .env
+.env.*
 
-# Datos del sistema (imágenes temporales)
+# --- CARPETAS DE DATOS TEMPORALES O GRANDES ---
 data/
-!data/.gitkeep  # Si querés dejar la carpeta vacía en Git
-.vscode/settings.json
-# Pesos de modelos grandes
+!data/.gitkeep
+raw_faces/
+known_faces/
+embeddings.json
+model-weights/
 **/model-weights/*.weights
 **/model-weights/*.h5
 
-raw_faces
-known_faces
-embeddings.json
+# --- ARCHIVOS DE DIFERENCIAS ---
+*.diff
+cambios.diff
 
-.diff
+# --- ARCHIVOS DE SISTEMA / IDE ---
 .DS_Store
+.vscode/
+.vscode/settings.json
+
+# --- ARCHIVOS DEL FRONTEND (Node.js, React) ---
+node_modules/
+coverage/
+build/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+
+# --- ARCHIVOS GENERADOS POR PRUEBAS ---
+*.log
+*.tmp
+*.bak
+
+# --- OTROS ---
+__snapshots__/
+*.orig
