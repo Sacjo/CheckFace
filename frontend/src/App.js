@@ -4,15 +4,17 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Sidebar from './components/sidebar';
 import Dashboard from './pages/Dashboard';
 import Reconocimiento from './pages/Reconocimiento';
+import RegistrarEstudiante from './pages/RegistrarEstudiante';
 
 function App() {
   return (
     <Router>
       <Sidebar>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/reconocimiento" element={<Reconocimiento />} />
+          <Route path="/registrar-estudiante" element={<RegistrarEstudiante />} />
         </Routes>
       </Sidebar>
     </Router>

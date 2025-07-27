@@ -41,6 +41,16 @@ export default function Sidebar({ children }) {
           >
             <i className="fas fa-camera me-2"></i> Reconocimiento Facial
           </NavLink>
+          <NavLink
+            to="/registrar-estudiante"
+            className={({ isActive }) =>
+              `list-group-item list-group-item-action bg-dark text-white px-4 ${
+                isActive ? 'active bg-primary' : ''
+              }`
+            }
+          >
+            <i className="fas fa-user-plus me-2"></i> Registrar Estudiante
+          </NavLink>
         </div>
       </div>
 
