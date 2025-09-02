@@ -13,10 +13,11 @@ data/
 # Pesos de modelos grandes
 **/model-weights/*.weights
 **/model-weights/*.h5
+yolov8n-face.pt
 
 raw_faces
 known_faces
-embeddings.json
+embeddings
 
 .diff
 .DS_Store
