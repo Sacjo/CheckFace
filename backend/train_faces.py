@@ -1,13 +1,15 @@
-from backend.app.detection.yoloface import detect_faces
+
+from detection.yoloface import detect_faces
 from deepface import DeepFace
 import cv2
 import os
 import numpy as np
 import json
 
-RAW_DIR = "backend/app/recognition/raw_faces"
-PROCESSED_DIR = "backend/app/recognition/known_faces"
-EMBEDDING_PATH = "backend/app/recognition/embeddings.json"
+
+RAW_DIR = "backend/recognition/raw_faces"
+PROCESSED_DIR = "backend/recognition/known_faces"
+EMBEDDINGS_DIR = "backend/recognition/embeddings"  # ← nuevo
 
 def recortar_y_guardar():
     print("🧼 Limpiando rostros anteriores en known_faces/...")
@@ -15,8 +17,7 @@ def recortar_y_guardar():
         person_path = os.path.join(PROCESSED_DIR, person)
         if os.path.isdir(person_path):
             for file in os.listdir(person_path):
-                file_path = os.path.join(person_path, file)
-                os.remove(file_path)
+                os.remove(os.path.join(person_path, file))
             print(f"🧹 Limpiado: {person_path}")
 
     print("✂️ Recortando rostros con YOLOv8...")
@@ -31,7 +32,7 @@ def recortar_y_guardar():
         os.makedirs(processed_path, exist_ok=True)
 
         for file in os.listdir(raw_path):
-            if not file.lower().endswith((".jpg", ".png")):
+            if not file.lower().endswith((".jpg", ".png", ".jepg",)):
                 continue
 
             image_path = os.path.join(raw_path, file)
@@ -52,7 +53,8 @@ def recortar_y_guardar():
 
 def generar_embeddings():
     print("🧬 Generando embeddings con DeepFace...")
-    embeddings = []
+    os.makedirs(EMBEDDINGS_DIR, exist_ok=True)
+
     resumen_por_persona = {}
 
     for person in os.listdir(PROCESSED_DIR):
@@ -69,26 +71,23 @@ def generar_embeddings():
             try:
                 img_path = os.path.join(person_path, file)
                 result = DeepFace.represent(img_path=img_path, model_name="ArcFace", enforce_detection=False)[0]
-                embeddings.append({
-                    "name": person,
-                    "embedding": result["embedding"]
-                })
                 person_embeddings.append(result["embedding"])
                 print(f"🧠 Embedding generado: {person}/{file}")
             except Exception as e:
                 print(f"⚠️ Error en {file}: {e}")
 
-        # Guardar resumen por persona
-        resumen_por_persona[person] = {
-            "count": len(person_embeddings),
-            "distance_avg": calcular_distancia_promedio(person_embeddings)
-        }
+        # Guardar los embeddings en archivo por persona
+        if person_embeddings:
+            with open(os.path.join(EMBEDDINGS_DIR, f"{person}.json"), "w") as f:
+                json.dump(person_embeddings, f)
 
-    with open(EMBEDDING_PATH, "w") as f:
-        json.dump(embeddings, f)
+            resumen_por_persona[person] = {
+                "count": len(person_embeddings),
+                "distance_avg": calcular_distancia_promedio(person_embeddings)
+            }
 
-    print(f"\n📦 Embeddings guardados en {EMBEDDING_PATH}\n")
-    print("📊 Resumen por persona:")
+    print("\n📦 Embeddings guardados por persona")
+    print("📊 Resumen:")
     for person, data in resumen_por_persona.items():
         print(f"🧍 {person}: {data['count']} embeddings - dist. promedio interna: {data['distance_avg']:.2f}")
 
@@ -112,6 +111,3 @@ def entrenar():
 
 if __name__ == "__main__":
     entrenar()
-
-
-

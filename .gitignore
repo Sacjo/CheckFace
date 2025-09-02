@@ -18,7 +18,13 @@ embeddings.json
 model-weights/
 **/model-weights/*.weights
 **/model-weights/*.h5
+yolov8n-face.pt
 
+raw_faces
+known_faces
+embeddings
+
+.diff
 # --- ARCHIVOS DE DIFERENCIAS ---
 *.diff
 cambios.diff
