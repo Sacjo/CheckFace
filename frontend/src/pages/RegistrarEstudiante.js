@@ -15,13 +15,13 @@ export default function RegistrarEstudiante() {
 
   const onSubmit = async e => {
     e.preventDefault();
-    if (!name || files.length < 5) {
-      setStatus({ 
-        type: 'danger', 
-        msg: 'Debe indicar nombre y al menos 5 imágenes (máx 10).' 
-      });
-      return;
-    }
+    // if (!name || files.length >=1) {
+    //   setStatus({ 
+    //     type: 'danger', 
+    //     msg: 'Debe indicar nombre y al menos 5 imágenes (máx 10).' 
+    //   });
+    //   return;
+    // }
 
     const formData = new FormData();
     formData.append('name', name);
