@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import 'datatables.net-dt';
 import EditStudentModal from './EditStudentModal';
+import $ from 'jquery';
 
 export default function StudentsTable() {
   const [data, setData] = useState([]);

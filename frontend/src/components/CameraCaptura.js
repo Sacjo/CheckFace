@@ -17,21 +17,17 @@ export default function CameraCapture() {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(d => d.kind === 'videoinput');
-        const externalCam = videoDevices.find(d =>
-          d.label.toLowerCase().includes('droidcam') ||
-          d.label.toLowerCase().includes('obs')
-        );
-        const deviceId = externalCam
-          ? externalCam.deviceId
-          : (videoDevices[0]?.deviceId || null);
 
-        if (!deviceId) {
-          console.error('No se encontró ninguna cámara');
+        if (videoDevices.length === 0) {
+          console.error('No hay cámaras disponibles');
+          alert('No se encontró ninguna cámara en este dispositivo.');
           return;
         }
 
+        const deviceId = videoDevices[0].deviceId;
+
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: { exact: deviceId }, width: 640, height: 480 },
+          video: deviceId ? { deviceId: { exact: deviceId }, width: 640, height: 480 } : true,
           audio: false
         });
         videoRef.current.srcObject = stream;
@@ -71,20 +67,20 @@ export default function CameraCapture() {
       );
       setResult(response.data);
 
-      if (response.data.match) {
-        const now = Date.now();
-        const name = response.data.name;
-        if (!lastRegistered[name] || now - lastRegistered[name] > 60000) {
-          await axios.post(
-            'http://127.0.0.1:5000/api/asistencia',
-            { name },
-            { headers: { 'Content-Type': 'application/json' } }
-          );
-          setLastRegistered(prev => ({ ...prev, [name]: now }));
-          setRegistroConfirmado(true);
-          setTimeout(() => setRegistroConfirmado(false), 4000);
-        }
-      }
+      // if (response.data.match) {
+      //   const now = Date.now();
+      //   const name = response.data.name;
+      //   if (!lastRegistered[name] || now - lastRegistered[name] > 60000) {
+      //     await axios.post(
+      //       'http://127.0.0.1:5000/api/asistencia',
+      //       { name },
+      //       { headers: { 'Content-Type': 'application/json' } }
+      //     );
+      //     setLastRegistered(prev => ({ ...prev, [name]: now }));
+      //     setRegistroConfirmado(true);
+      //     setTimeout(() => setRegistroConfirmado(false), 4000);
+      //   }
+      // }
     } catch (error) {
       console.error('Error en reconocimiento:', error);
       setResult({ error: 'Error en el reconocimiento' });
@@ -172,5 +168,5 @@ export default function CameraCapture() {
         </div>
       )}
     </div>
-);
+  );
 }

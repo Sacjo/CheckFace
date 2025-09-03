@@ -1,26 +1,35 @@
+import os
 import json
 import numpy as np
 from deepface import DeepFace
 import tempfile
 import cv2
-import os
 
-# Carpeta donde están los JSON con embeddings por persona
-EMBEDDINGS_DIR = "backend/recognition/embeddings"
+EMBEDDINGS_DIR = os.path.join(os.path.dirname(__file__), "embeddings")
 
-# Cargar todos los embeddings al iniciar
 embeddings = []
-for file in os.listdir(EMBEDDINGS_DIR):
-    if file.endswith(".json"):
-        person_name = file.replace(".json", "")
-        path = os.path.join(EMBEDDINGS_DIR, file)
-        with open(path, "r") as f:
-            person_embeddings = json.load(f)
-            for vec in person_embeddings:
-                embeddings.append({
-                    "name": person_name,
-                    "embedding": vec
-                })
+
+def load_embeddings():
+    global embeddings
+    embeddings = []
+
+    print(f"📂 Cargando embeddings desde: {EMBEDDINGS_DIR}")
+    if not os.path.isdir(EMBEDDINGS_DIR):
+        print("⚠️ Ruta de embeddings no encontrada")
+        return
+
+    for file in os.listdir(EMBEDDINGS_DIR):
+        if file.endswith(".json"):
+            person_name = file.replace(".json", "")
+            path = os.path.join(EMBEDDINGS_DIR, file)
+            with open(path, "r") as f:
+                person_embeddings = json.load(f)
+                for vec in person_embeddings:
+                    embeddings.append({
+                        "name": person_name,
+                        "embedding": vec
+                    })
+    print("✅ Total embeddings cargados:", len(embeddings))
 
 def recognize_face_embedding(cropped_face):
     try:

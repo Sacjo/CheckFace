@@ -1,8 +1,8 @@
 from flask import Flask
 from flask_cors import CORS
-from backend.app.routes.recognition_routes import recognition_routes
-from backend.app.routes.attendance_routes import attendance_routes
-from backend.app.routes.student_routes    import student_routes
+from routes.recognition_routes import recognition_routes
+from routes.attendance_routes import attendance_routes
+from routes.student_routes    import student_routes
 
 app = Flask(__name__)
 
