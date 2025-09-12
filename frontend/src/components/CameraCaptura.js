@@ -149,16 +149,17 @@ export default function CameraCapture() {
         </div>
       )}
 
-      {result && !result.error && (
-        <div
-          className="alert mt-4"
-          style={{ background: result.match ? '#d1e7dd' : '#f8d7da' }}
-        >
-          <h5>
-            {result.match ? '✅ Coincidencia' : '❌ No reconocido'}
-          </h5>
-          <p>Nombre: {result.name}</p>
-          <p>Similitud: {result.similarity}%</p>
+      {Array.isArray(result) && result.length > 0 && (
+        <div className="alert mt-4" style={{ background: '#e8f0fe' }}>
+          <h5>Resultados de reconocimiento:</h5>
+          <ul className="list-group">
+            {result.map((r, idx) => (
+              <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
+                <span>{r.match ? '✅' : '❌'} Nombre: {r.name}</span>
+                <span>Similitud: {r.similarity?.toFixed(2)}%</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
