@@ -4,22 +4,11 @@ import numpy as np
 from deepface import DeepFace
 import tempfile
 import cv2
+from recognition.helpers import l2_normalize, cosine_distance
 
 # Ruta al índice de centroides generado en train_faces.py
 EMBEDDINGS_DIR = os.path.join(os.path.dirname(__file__), "embeddings")
 CENTROIDS_PATH = os.path.join(EMBEDDINGS_DIR, "centroids.json")
-
-# -----------------------------
-# Helpers
-# -----------------------------
-def l2_normalize(v: np.ndarray, eps=1e-10) -> np.ndarray:
-    """Normaliza un vector a norma L2 (longitud 1)."""
-    n = np.linalg.norm(v) + eps
-    return v / n
-
-def cosine_distance(a: np.ndarray, b: np.ndarray) -> float:
-    """Distancia coseno entre dos vectores normalizados."""
-    return 1.0 - float(np.dot(a, b))
 
 # -----------------------------
 # Cargar centroides
@@ -75,7 +64,7 @@ def recognize_face(face_crop, centroids: dict, model_name="ArcFace"):
     similarity = max(0, 100 - min_dist * 100)
 
     # Umbral → si min_dist es muy alto, marcar como desconocido
-    if min_dist > 0.25:  # ajustable según tus pruebas
+    if min_dist > 0.45:  # ajustable según tus pruebas
         identity = "Desconocido"
         similarity = 0
 
