@@ -5,6 +5,7 @@ import Sidebar from './components/sidebar';
 import Dashboard from './pages/Dashboard';
 import Reconocimiento from './pages/Reconocimiento';
 import RegistrarEstudiante from './pages/RegistrarEstudiante';
+import RegistrarRol from './pages/RegistrarRol';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/reconocimiento" element={<Reconocimiento />} />
           <Route path="/registrar-estudiante" element={<RegistrarEstudiante />} />
+          <Route path="/registrar-rol" element={<RegistrarRol />} />
         </Routes>
       </Sidebar>
     </Router>
