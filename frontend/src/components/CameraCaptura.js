@@ -2,14 +2,18 @@
 import React, { useRef, useState, useEffect } from 'react';
 import axios from 'axios';
 
+let yaEnviado = false; // ⬅️ Se define una sola vez
+
 export default function CameraCapture() {
   const videoRef = useRef(null);
   const [streamStarted, setStreamStarted] = useState(false);
   const [result, setResult] = useState(null);
   const [capturing, setCapturing] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
-  const [lastRegistered, setLastRegistered] = useState({});
   const [registroConfirmado, setRegistroConfirmado] = useState(false);
+  const [nombresPendientes, setNombresPendientes] = useState([]);
+  const [cursos, setCursos] = useState([]);
+  const [cursoSeleccionado, setCursoSeleccionado] = useState("");
 
   // 1. Arranca la cámara al montar
   useEffect(() => {
@@ -65,22 +69,20 @@ export default function CameraCapture() {
         'http://127.0.0.1:5000/api/recognize',
         formData
       );
-      setResult(response.data);
+      setResult(Array.isArray(response.data) ? response.data : []);
 
-      // if (response.data.match) {
-      //   const now = Date.now();
-      //   const name = response.data.name;
-      //   if (!lastRegistered[name] || now - lastRegistered[name] > 60000) {
-      //     await axios.post(
-      //       'http://127.0.0.1:5000/api/asistencia',
-      //       { name },
-      //       { headers: { 'Content-Type': 'application/json' } }
-      //     );
-      //     setLastRegistered(prev => ({ ...prev, [name]: now }));
-      //     setRegistroConfirmado(true);
-      //     setTimeout(() => setRegistroConfirmado(false), 4000);
-      //   }
-      // }
+      // Extraer nombres únicos reconocidos correctamente
+      const nombresReconocidos = response.data
+        .filter((match) => match.match)
+        .map((match) => match.name);
+
+      // Guardar los reconocidos en una variable de estado global
+      if (nombresReconocidos.length > 0) {
+        setNombresPendientes((prev) => {
+          const nuevos = nombresReconocidos.filter((n) => !prev.includes(n));
+          return [...prev, ...nuevos];
+        });
+      }
     } catch (error) {
       console.error('Error en reconocimiento:', error);
       setResult({ error: 'Error en el reconocimiento' });
@@ -89,12 +91,46 @@ export default function CameraCapture() {
 
   // 3. Inicia la captura periódica
   const startCapturing = () => {
-    if (!streamStarted) return;
+    yaEnviado = false;
+    if (!streamStarted || !cursoSeleccionado) {
+      alert("Por favor, seleccioná un curso antes de iniciar.");
+      return;
+    }
+
     setCapturing(true);
     const id = setInterval(captureAndSend, 2000);
-    setIntervalId(id);
+    setIntervalId(id); // guardamos el ID para limpiarlo después
+
+    // Detener luego de 15 segundos
     setTimeout(() => {
-      clearInterval(id);
+      clearInterval(id); // detenemos la captura
+
+      // ⚠️ Muy importante: usamos el último valor de `nombresPendientes`
+      setNombresPendientes((currentNombres) => {
+        if (!yaEnviado && currentNombres.length > 0 && cursoSeleccionado) {
+          yaEnviado = true;
+          axios.post("http://127.0.0.1:5000/api/asistencia", {
+            names: currentNombres,
+            course_id: cursoSeleccionado,
+          }, {
+            headers: {
+              "Content-Type": "application/json"
+            }
+          })
+            .then((res) => {
+              console.log("✅ Asistencia enviada:", res.data);
+              setRegistroConfirmado(true);
+            })
+            .catch((err) => {
+              console.error("❌ Error al enviar asistencia:", err);
+            });
+        } else {
+          console.warn("⚠️ Ya se envió o no hay nombres válidos.");
+        }
+
+        return currentNombres;
+      });
+
       setCapturing(false);
     }, 15000);
   };
@@ -102,9 +138,39 @@ export default function CameraCapture() {
   // Limpieza de intervalos
   useEffect(() => () => clearInterval(intervalId), [intervalId]);
 
+  // Cargar cursos desde el backend al montar
+  useEffect(() => {
+    const fetchCursos = async () => {
+      try {
+        const res = await axios.get("http://127.0.0.1:5000/api/courses");
+        setCursos(res.data);
+      } catch (error) {
+        console.error("Error al obtener cursos:", error);
+      }
+    };
+
+    fetchCursos();
+  }, []);
+
   return (
     <div className="container text-center mt-4">
       <h3>Reconocimiento Facial (Automático)</h3>
+      <div className="mt-3">
+        <label htmlFor="curso" className="form-label">Seleccionar Curso</label>
+        <select
+          id="curso"
+          className="form-select"
+          value={cursoSeleccionado}
+          onChange={(e) => setCursoSeleccionado(e.target.value)}
+        >
+          <option value="">-- Selecciona un curso --</option>
+          {cursos.map(c => (
+            <option key={c.id} value={c.id}>
+              {c.name} - {c.career} ({c.semester}° semestre)
+            </option>
+          ))}
+        </select>
+      </div>
 
       {!streamStarted && (
         <p className="text-danger">Cargando cámara...</p>

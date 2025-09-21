@@ -1,41 +1,58 @@
 from flask import Blueprint, request, jsonify
 from database.db import get_connection
+from datetime import datetime
 
 attendance_routes = Blueprint("attendance_routes", __name__)
 
 @attendance_routes.route("/api/asistencia", methods=["POST"])
 def registrar_asistencia():
     data = request.json
-    nombre = data.get("name")
+    names = data.get("names", [])
+    course_id = data.get("course_id")
 
-    if not nombre:
-        return jsonify({"success": False, "message": "Nombre requerido"}), 400
+    if not names or not course_id:
+        return jsonify({"success": False, "message": "Nombres y course_id requeridos"}), 400
 
     try:
+
+        data = request.get_json()
+        print("📥 Recibido en backend:", data)
+
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Verificar si el estudiante ya existe
-        cursor.execute("SELECT id FROM students WHERE name = %s", (nombre,))
-        row = cursor.fetchone()
+        for name in names:
+            # Buscar usuario por nombre
+            cursor.execute("SELECT id FROM users WHERE ci = %s", (name,))
+            user = cursor.fetchone()
+            if not user:
+                print(f"⚠️ Usuario no encontrado: {name}")
+                continue
 
-        if row:
-            student_id = row[0]
-        else:
-            # Insertar nuevo estudiante
-            cursor.execute("INSERT INTO students (name) VALUES (%s) RETURNING id", (nombre,))
-            student_id = cursor.fetchone()[0]
+            user_id = user[0]
 
-        # Registrar asistencia
-        cursor.execute("INSERT INTO attendance (student_id) VALUES (%s)", (student_id,))
+            # Validar pertenencia al curso
+            cursor.execute(
+                "SELECT 1 FROM user_courses WHERE user_id = %s AND course_id = %s",
+                (user_id, course_id)
+            )
+            if not cursor.fetchone():
+                print(f"⚠️ Usuario {name} no pertenece al curso {course_id}")
+                continue
+
+            # Registrar asistencia
+            cursor.execute(
+                "INSERT INTO attendances (user_id, course_id, date) VALUES (%s, %s, NOW())",
+                (user_id, course_id)
+            )
+
         conn.commit()
-
         cursor.close()
         conn.close()
-        return jsonify({"success": True, "message": "Asistencia registrada"}), 200
+        return jsonify({"success": True, "message": "Asistencias registradas"}), 200
 
     except Exception as e:
-        print("Error al registrar asistencia:", e)
+        print("❌ Error:", e)
         return jsonify({"success": False, "error": str(e)}), 500
 
 @attendance_routes.route("/api/asistencias", methods=["GET"])
