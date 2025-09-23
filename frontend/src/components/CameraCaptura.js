@@ -1,4 +1,6 @@
 // src/components/CameraCapture.js
+
+// mejorar el reconocmiento, cuando inice el reconomiento, limpiar los nombres pendientes
 import React, { useRef, useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -12,6 +14,7 @@ export default function CameraCapture() {
   const [intervalId, setIntervalId] = useState(null);
   const [registroConfirmado, setRegistroConfirmado] = useState(false);
   const [nombresPendientes, setNombresPendientes] = useState([]);
+  const [conteoNombres, setConteoNombres] = useState({});
   const [cursos, setCursos] = useState([]);
   const [cursoSeleccionado, setCursoSeleccionado] = useState("");
 
@@ -78,9 +81,12 @@ export default function CameraCapture() {
 
       // Guardar los reconocidos en una variable de estado global
       if (nombresReconocidos.length > 0) {
-        setNombresPendientes((prev) => {
-          const nuevos = nombresReconocidos.filter((n) => !prev.includes(n));
-          return [...prev, ...nuevos];
+        setConteoNombres((prevConteo) => {
+          const nuevoConteo = { ...prevConteo };
+          nombresReconocidos.forEach((nombre) => {
+            nuevoConteo[nombre] = (nuevoConteo[nombre] || 0) + 1;
+          });
+          return nuevoConteo;
         });
       }
     } catch (error) {
@@ -92,6 +98,8 @@ export default function CameraCapture() {
   // 3. Inicia la captura periódica
   const startCapturing = () => {
     yaEnviado = false;
+    setNombresPendientes([]);
+    setConteoNombres({});
     if (!streamStarted || !cursoSeleccionado) {
       alert("Por favor, seleccioná un curso antes de iniciar.");
       return;
@@ -106,11 +114,15 @@ export default function CameraCapture() {
       clearInterval(id); // detenemos la captura
 
       // ⚠️ Muy importante: usamos el último valor de `nombresPendientes`
-      setNombresPendientes((currentNombres) => {
-        if (!yaEnviado && currentNombres.length > 0 && cursoSeleccionado) {
+      setConteoNombres((conteoFinal) => {
+        const nombresFiltrados = Object.entries(conteoFinal)
+          .filter(([nombre, count]) => count >= 3)
+          .map(([nombre]) => nombre);
+
+        if (!yaEnviado && nombresFiltrados.length > 0 && cursoSeleccionado) {
           yaEnviado = true;
           axios.post("http://127.0.0.1:5000/api/asistencia", {
-            names: currentNombres,
+            names: nombresFiltrados,
             course_id: cursoSeleccionado,
           }, {
             headers: {
@@ -128,7 +140,10 @@ export default function CameraCapture() {
           console.warn("⚠️ Ya se envió o no hay nombres válidos.");
         }
 
-        return currentNombres;
+        // También lo seteamos para mostrar al usuario
+        setNombresPendientes(nombresFiltrados);
+
+        return conteoFinal;
       });
 
       setCapturing(false);
@@ -212,6 +227,19 @@ export default function CameraCapture() {
       {registroConfirmado && (
         <div className="alert alert-success mt-4">
           ✅ Asistencia registrada correctamente
+        </div>
+      )}
+
+      {nombresPendientes.length > 0 && !capturing && (
+        <div className="mt-4">
+          <h5>🟢 Estudiantes registrados:</h5>
+          <ul className="list-group">
+            {nombresPendientes.map((nombre, idx) => (
+              <li key={idx} className="list-group-item">
+                {nombre}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
