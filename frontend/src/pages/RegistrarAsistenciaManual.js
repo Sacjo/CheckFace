@@ -16,7 +16,7 @@ export default function RegistrarAsistenciaManual() {
   const [status, setStatus] = useState(null);
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:5000/api/users')
+    axios.get('http://127.0.0.1:5000/api/participants')
       .then(res => {
         const options = res.data.map(user => ({
           value: user.id,
@@ -35,7 +35,7 @@ export default function RegistrarAsistenciaManual() {
     setFormData({ ...formData, course_id: '' });
 
     try {
-      const res = await axios.get(`http://127.0.0.1:5000/api/users/${selected.value}/courses`);
+      const res = await axios.get(`http://127.0.0.1:5000/api/participants/${selected.value}/courses`);
       setCourses(res.data);
     } catch (err) {
       console.error(err);

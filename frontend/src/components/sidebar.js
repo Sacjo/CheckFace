@@ -55,7 +55,7 @@ export default function Sidebar({ children }) {
               }`
             }
           >
-            <i className="fas fa-user-plus me-2"></i> Registrar rol
+            <i className="fas fa-user-shield me-2"></i> Registrar rol
           </NavLink>
           <NavLink
             to="/registrar-curso"
@@ -64,7 +64,7 @@ export default function Sidebar({ children }) {
               }`
             }
           >
-            <i className="fas fa-user-plus me-2"></i> Registrar curso
+            <i className="fas fa-book-open me-2"></i> Registrar curso
           </NavLink>
           <NavLink
             to="/registrar-horario"
@@ -82,7 +82,15 @@ export default function Sidebar({ children }) {
               }`
             }
           >
-            <i className="fas fa-calendar-plus me-2"></i> Registrar asistencia
+            <i className="fas fa-user-check me-2"></i> Registrar asistencia
+          </NavLink>
+          <NavLink
+            to="/asignar-curso"
+            className={({ isActive }) =>
+              `list-group-item list-group-item-action bg-dark text-white px-4 ${isActive ? 'active bg-primary' : ''}`
+            }
+          >
+            <i className="fas fa-link me-2"></i> Asignar curso
           </NavLink>
         </div>
       </div>
