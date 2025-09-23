@@ -1,13 +1,16 @@
 from detection.yoloface import detect_faces
-from recognition.face_recognizer import recognize_face_embedding
+from recognition.face_recognizer import load_centroids, recognize_face
 import cv2
+
+# Cargar centroides
+centroids = load_centroids()
 
 print("🚀 Iniciando CheckFace: detección + reconocimiento en tiempo real...")
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     print("⚠️ Cámara externa no disponible. Probando con cámara integrada...")
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
 
 if not cap.isOpened():
     print("❌ No se pudo abrir ninguna cámara.")
@@ -22,16 +25,17 @@ while True:
     boxes = detect_faces(frame)
 
     for (x, y, w, h) in boxes:
-        # Recortar el rostro detectado por YOLO
+        # Recortar rostro detectado
         face_crop = frame[y:y+h, x:x+w]
+        face_crop = cv2.resize(face_crop, (160, 160))
 
-        # Reconocer quién es
-        name, similarity = recognize_face_embedding(face_crop)
+        # Reconocer
+        identity, min_dist, similarity = recognize_face(face_crop, centroids)
 
-        label = f"{name} ({similarity:.1f}%)"
+        label = f"{identity} ({similarity:.1f}%)"
+        print(f"🔎 Detectado: {label}")
 
-
-        # Dibujar el resultado
+        # Dibujar en pantalla
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         cv2.putText(frame, label, (x, y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)

@@ -1,111 +1,132 @@
-from detection.yoloface import detect_faces
-from deepface import DeepFace
-import cv2
+# backend/train_faces.py
+
 import os
-import numpy as np
+import sys
+import cv2
 import json
+import numpy as np
+from deepface import DeepFace
+from detection.yoloface import detect_faces
+from recognition.helpers import (
+    robust_mean,
+    calcular_distancia_promedio
+)
 
 RAW_DIR = "backend/recognition/raw_faces"
 PROCESSED_DIR = "backend/recognition/known_faces"
-EMBEDDINGS_DIR = "backend/recognition/embeddings"  # ← nuevo
-
-def recortar_y_guardar():
-    print("🧼 Limpiando rostros anteriores en known_faces/...")
-    for person in os.listdir(PROCESSED_DIR):
-        person_path = os.path.join(PROCESSED_DIR, person)
-        if os.path.isdir(person_path):
-            for file in os.listdir(person_path):
-                os.remove(os.path.join(person_path, file))
-            print(f"🧹 Limpiado: {person_path}")
-
-    print("✂️ Recortando rostros con YOLOv8...")
-
-    for person in os.listdir(RAW_DIR):
-        raw_path = os.path.join(RAW_DIR, person)
-        processed_path = os.path.join(PROCESSED_DIR, person)
-        
-        if not os.path.isdir(raw_path):
-            continue 
-        
-        os.makedirs(processed_path, exist_ok=True)
-
-        for file in os.listdir(raw_path):
-            if not file.lower().endswith((".jpg", ".png", ".jepg",)):
-                continue
-
-            image_path = os.path.join(raw_path, file)
-            img = cv2.imread(image_path)
-            boxes = detect_faces(img)
-
-            if not boxes:
-                print(f"⚠️ No se detectó rostro en {file}, se salta.")
-                continue
-
-            x, y, w, h = boxes[0]
-            face_crop = img[y:y+h, x:x+w]
-
-            save_path = os.path.join(processed_path, file)
-            cv2.imwrite(save_path, face_crop)
-            print(f"✅ {save_path}")
+EMBEDDINGS_DIR = "backend/recognition/embeddings"
+CENTROIDS_PATH = os.path.join(EMBEDDINGS_DIR, "centroids.json")
 
 
-def generar_embeddings():
-    print("🧬 Generando embeddings con DeepFace...")
-    os.makedirs(EMBEDDINGS_DIR, exist_ok=True)
+def recortar_y_guardar(ci):
+    print(f"✂️ Recortando rostros para {ci} con YOLOv8...")
+    raw_path = os.path.join(RAW_DIR, ci)
+    processed_path = os.path.join(PROCESSED_DIR, ci)
 
-    resumen_por_persona = {}
+    if not os.path.isdir(raw_path):
+        print(f"❌ No se encontró el directorio {raw_path}")
+        return
 
-    for person in os.listdir(PROCESSED_DIR):
-        person_path = os.path.join(PROCESSED_DIR, person)
-        if not os.path.isdir(person_path):
+    os.makedirs(processed_path, exist_ok=True)
+
+    for file in os.listdir(raw_path):
+        if not file.lower().endswith((".jpg", ".jpeg", ".png")):
             continue
 
-        person_embeddings = []
+        image_path = os.path.join(raw_path, file)
+        save_path  = os.path.join(processed_path, file)
 
-        for file in os.listdir(person_path):
-            if not file.lower().endswith((".jpg", ".png")):
-                continue
+        if os.path.exists(save_path):
+            continue
 
-            try:
-                img_path = os.path.join(person_path, file)
-                result = DeepFace.represent(img_path=img_path, model_name="ArcFace", enforce_detection=False)[0]
-                person_embeddings.append(result["embedding"])
-                print(f"🧠 Embedding generado: {person}/{file}")
-            except Exception as e:
-                print(f"⚠️ Error en {file}: {e}")
+        img = cv2.imread(image_path)
+        boxes = detect_faces(img)
 
-        # Guardar los embeddings en archivo por persona
-        if person_embeddings:
-            with open(os.path.join(EMBEDDINGS_DIR, f"{person}.json"), "w") as f:
-                json.dump(person_embeddings, f)
+        if not boxes:
+            print(f"⚠️ No se detectó rostro en {file}, se salta.")
+            continue
 
-            resumen_por_persona[person] = {
-                "count": len(person_embeddings),
-                "distance_avg": calcular_distancia_promedio(person_embeddings)
-            }
-
-    print("\n📦 Embeddings guardados por persona")
-    print("📊 Resumen:")
-    for person, data in resumen_por_persona.items():
-        print(f"🧍 {person}: {data['count']} embeddings - dist. promedio interna: {data['distance_avg']:.2f}")
+        x, y, w, h = boxes[0]
+        face_crop = img[y:y+h, x:x+w]
+        face_crop = cv2.resize(face_crop, (160, 160))
+        cv2.imwrite(save_path, face_crop)
+        print(f"✅ Recortado: {save_path}")
 
 
-def calcular_distancia_promedio(embeddings_list):
-    if len(embeddings_list) < 2:
-        return 0.0
-    distancias = []
-    for i in range(len(embeddings_list)):
-        for j in range(i + 1, len(embeddings_list)):
-            a = np.array(embeddings_list[i])
-            b = np.array(embeddings_list[j])
-            dist = np.linalg.norm(a - b)
-            distancias.append(dist)
-    return np.mean(distancias) if distancias else 0.0
+def generar_embeddings(ci):
+    print(f"🧬 Generando embeddings para {ci}...")
+    os.makedirs(EMBEDDINGS_DIR, exist_ok=True)
 
+    # Cargar centroides anteriores si existen
+    if os.path.exists(CENTROIDS_PATH):
+        with open(CENTROIDS_PATH, "r") as f:
+            centroids_index = json.load(f)
+    else:
+        centroids_index = {}
 
-def entrenar():
-    recortar_y_guardar()
-    generar_embeddings()
+    person_path = os.path.join(PROCESSED_DIR, ci)
+    if not os.path.isdir(person_path):
+        print(f"❌ No existe el directorio procesado de {ci}")
+        return
+
+    new_embeddings = []
+
+    for file in os.listdir(person_path):
+        if not file.lower().endswith((".jpg", ".jpeg", ".png")):
+            continue
+
+        img_path = os.path.join(person_path, file)
+        try:
+            rep = DeepFace.represent(
+                img_path=img_path,
+                model_name="ArcFace",
+                enforce_detection=False,
+                detector_backend="skip"
+            )[0]
+            emb = np.array(rep["embedding"], dtype=np.float32)
+            new_embeddings.append(emb.tolist())
+            print(f"🧠 Embedding generado: {file}")
+        except Exception as e:
+            print(f"⚠️ Error en {file}: {e}")
+
+    if not new_embeddings:
+        print("⚠️ No se generaron nuevos embeddings")
+        return
+
+    # Guardar los embeddings nuevos en su propio archivo JSON
+    emb_file_path = os.path.join(EMBEDDINGS_DIR, f"{ci}.json")
+    with open(emb_file_path, "w") as f:
+        json.dump(new_embeddings, f, indent=2)
+
+    # Calcular centroid y distancia promedio
+    emb_np = np.array(new_embeddings, dtype=np.float32)
+    centroid = robust_mean(emb_np)
+    intra_avg = calcular_distancia_promedio(new_embeddings)
+
+    # Actualizar solo los datos necesarios en centroids.json
+    centroids_index[ci] = {
+        "centroid": centroid.tolist(),
+        "count": len(new_embeddings),
+        "intra_dist_avg": intra_avg
+    }
+
+    with open(CENTROIDS_PATH, "w") as f:
+        json.dump(centroids_index, f, indent=2)
+
+    print(f"\n✅ Embeddings guardados en {emb_file_path}")
+    print(f"✅ Centroides actualizados en {CENTROIDS_PATH}")
+    print(f"📏 Distancia promedio interna para {ci}: {intra_avg:.4f}")
+
+def entrenar(ci):
+    recortar_y_guardar(ci)
+    generar_embeddings(ci)
+
 
 if __name__ == "__main__":
-    entrenar()
+    if len(sys.argv) != 2:
+        print("❌ Debe indicar el CI como argumento.")
+        print("Ejemplo: python backend/train_faces.py 5144692")
+        exit(1)
+
+    ci = sys.argv[1]
+    entrenar(ci)
