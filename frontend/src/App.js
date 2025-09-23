@@ -6,6 +6,11 @@ import Dashboard from './pages/Dashboard';
 import Reconocimiento from './pages/Reconocimiento';
 import RegistrarEstudiante from './pages/RegistrarEstudiante';
 import RegistrarRol from './pages/RegistrarRol';
+import RegistrarCurso from './pages/RegistrarCurso';
+import RegistrarHorarioCurso from './pages/RegistrarHorarioCurso';
+// import RegistrarAsistenciaManual from './pages/RegistrarAsistenciaManual';
+
+
 
 function App() {
   return (
@@ -17,6 +22,9 @@ function App() {
           <Route path="/reconocimiento" element={<Reconocimiento />} />
           <Route path="/registrar-estudiante" element={<RegistrarEstudiante />} />
           <Route path="/registrar-rol" element={<RegistrarRol />} />
+          <Route path="/registrar-curso" element={<RegistrarCurso />} />
+          <Route path="/registrar-horario" element={<RegistrarHorarioCurso />} />
+          {/* <Route path="/registrar-asistencia" element={<RegistrarAsistenciaManual />} /> */}
         </Routes>
       </Sidebar>
     </Router>
