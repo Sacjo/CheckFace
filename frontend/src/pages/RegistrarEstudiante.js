@@ -1,32 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Select from 'react-select';
 
 export default function RegistrarEstudiante() {
   const [form, setForm] = useState({
-    name: '',
-    ci: '',
-    email: '',
-    password: '',
-    role_id: '',
+    user_id: '',
     course_id: '',
+    full_name: '',
+    ci: '',
+    occupation: ''
   });
   const [files, setFiles] = useState([]);
-  const [roles, setRoles] = useState([]);
+  const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [status, setStatus] = useState(null);
 
   useEffect(() => {
-    // Cargar roles y cursos al montar
     const fetchData = async () => {
       try {
-        const [rolesRes, coursesRes] = await Promise.all([
-          axios.get('http://127.0.0.1:5000/api/roles'),
+        const [usersRes, coursesRes] = await Promise.all([
+          axios.get('http://127.0.0.1:5000/api/users/available'),
           axios.get('http://127.0.0.1:5000/api/courses'),
         ]);
-        setRoles(rolesRes.data);
+        const userOptions = usersRes.data.map(u => ({
+          value: u.id,
+          label: `${u.username} (ID ${u.id})`
+        }));
+        setUsers(userOptions);
         setCourses(coursesRes.data);
       } catch (err) {
-        console.error("Error al cargar roles o cursos:", err);
+        console.error("Error al cargar usuarios o cursos:", err);
       }
     };
     fetchData();
@@ -41,13 +44,14 @@ export default function RegistrarEstudiante() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const onUserSelect = selected => {
+    setForm({ ...form, user_id: selected?.value || '' });
+  };
+
   const onSubmit = async e => {
     e.preventDefault();
 
-    if (
-      !form.name || !form.ci || !form.email || !form.password ||
-      !form.role_id || !form.course_id || files.length < 3
-    ) {
+    if (!form.user_id || !form.course_id || !form.full_name || !form.ci || files.length < 3) {
       setStatus({
         type: 'danger',
         msg: 'Todos los campos son obligatorios y se requieren al menos 3 imágenes.',
@@ -61,33 +65,33 @@ export default function RegistrarEstudiante() {
 
     try {
       await axios.post(
-        'http://127.0.0.1:5000/api/users',
+        'http://127.0.0.1:5000/api/participants',
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
 
-      setStatus({ type: 'success', msg: 'Estudiante registrado correctamente' });
-      setForm({ name: '', ci: '', email: '', password: '', role_id: '', course_id: '' });
+      setStatus({ type: 'success', msg: 'Participante registrado correctamente' });
+      setForm({ user_id: '', course_id: '', full_name: '', ci: '', occupation: '' });
       setFiles([]);
-      e.target.reset(); // limpiar input file
+      e.target.reset();
     } catch (err) {
-      const msg = err.response?.data?.error || 'Error al registrar estudiante';
+      const msg = err.response?.data?.error || 'Error al registrar participante';
       setStatus({ type: 'danger', msg });
     }
   };
 
   return (
     <div className="container-fluid px-4">
-      <h1 className="mt-4">Registrar Nuevo Estudiante</h1>
+      <h1 className="mt-4">Registrar Participante</h1>
       <ol className="breadcrumb mb-4">
         <li className="breadcrumb-item"><a href="/">Dashboard</a></li>
-        <li className="breadcrumb-item active">Registrar Estudiante</li>
+        <li className="breadcrumb-item active">Registrar Participante</li>
       </ol>
 
       <div className="card mb-4">
         <div className="card-header">
           <i className="fas fa-user-plus me-1"></i>
-          Datos del Estudiante
+          Datos del Participante
         </div>
         <div className="card-body">
           {status && (
@@ -97,15 +101,26 @@ export default function RegistrarEstudiante() {
           )}
           <form onSubmit={onSubmit}>
             <div className="mb-3">
+              <label className="form-label">Seleccionar Usuario</label>
+              <Select
+                options={users}
+                onChange={onUserSelect}
+                placeholder="Buscar usuario por nombre o ID..."
+                isClearable
+              />
+            </div>
+
+            <div className="mb-3">
               <label className="form-label">Nombre completo</label>
               <input
                 type="text"
-                name="name"
+                name="full_name"
                 className="form-control"
-                value={form.name}
+                value={form.full_name}
                 onChange={onChange}
               />
             </div>
+
             <div className="mb-3">
               <label className="form-label">CI</label>
               <input
@@ -116,40 +131,21 @@ export default function RegistrarEstudiante() {
                 onChange={onChange}
               />
             </div>
+
             <div className="mb-3">
-              <label className="form-label">Email</label>
-              <input
-                type="email"
-                name="email"
-                className="form-control"
-                value={form.email}
-                onChange={onChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Contraseña</label>
-              <input
-                type="password"
-                name="password"
-                className="form-control"
-                value={form.password}
-                onChange={onChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Rol</label>
+              <label className="form-label">Ocupación</label>
               <select
-                name="role_id"
+                name="occupation"
                 className="form-select"
-                value={form.role_id}
+                value={form.occupation}
                 onChange={onChange}
               >
-                <option value="">Seleccionar rol</option>
-                {roles.map(role => (
-                  <option key={role.id} value={role.id}>{role.description}</option>
-                ))}
+                <option value="">Seleccionar ocupación</option>
+                <option value="student">Estudiante</option>
+                <option value="teacher">Docente</option>
               </select>
             </div>
+
             <div className="mb-3">
               <label className="form-label">Curso</label>
               <select
@@ -166,6 +162,7 @@ export default function RegistrarEstudiante() {
                 ))}
               </select>
             </div>
+
             <div className="mb-3">
               <label htmlFor="images" className="form-label">
                 Fotografías (mínimo 3 - máximo 10)
@@ -182,8 +179,9 @@ export default function RegistrarEstudiante() {
                 Has seleccionado {files.length} archivo(s).
               </small>
             </div>
+
             <button type="submit" className="btn btn-primary">
-              Registrar Estudiante
+              Registrar Participante
             </button>
           </form>
         </div>

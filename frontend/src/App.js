@@ -8,7 +8,8 @@ import RegistrarEstudiante from './pages/RegistrarEstudiante';
 import RegistrarRol from './pages/RegistrarRol';
 import RegistrarCurso from './pages/RegistrarCurso';
 import RegistrarHorarioCurso from './pages/RegistrarHorarioCurso';
-// import RegistrarAsistenciaManual from './pages/RegistrarAsistenciaManual';
+import RegistrarAsistenciaManual from './pages/RegistrarAsistenciaManual';
+import AsignarCurso from './pages/AsignarCurso';
 
 
 
@@ -24,7 +25,8 @@ function App() {
           <Route path="/registrar-rol" element={<RegistrarRol />} />
           <Route path="/registrar-curso" element={<RegistrarCurso />} />
           <Route path="/registrar-horario" element={<RegistrarHorarioCurso />} />
-          {/* <Route path="/registrar-asistencia" element={<RegistrarAsistenciaManual />} /> */}
+          <Route path="/registrar-asistencia" element={<RegistrarAsistenciaManual />} />
+          <Route path="/asignar-curso" element={<AsignarCurso />} />
         </Routes>
       </Sidebar>
     </Router>
