@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from routes.recognition_routes import recognition_routes
+from routes.course_schedules_routes import course_schedule_routes
 from routes.course_routes import course_routes
 from routes.attendance_routes import attendance_routes
 from routes.user_routes    import user_routes
@@ -14,6 +15,7 @@ CORS(app)
 # Registra las rutas
 app.register_blueprint(recognition_routes)
 app.register_blueprint(course_routes)
+app.register_blueprint(course_schedule_routes)
 app.register_blueprint(attendance_routes)
 app.register_blueprint(user_routes)
 app.register_blueprint(role_routes)
