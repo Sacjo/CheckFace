@@ -7,6 +7,7 @@ from routes.attendance_routes import attendance_routes
 from routes.user_routes    import user_routes
 from routes.role_routes    import role_routes
 from routes.participants_routes    import participants_routes
+from routes.auth_routes import auth_routes
 
 app = Flask(__name__)
 
@@ -21,6 +22,8 @@ app.register_blueprint(attendance_routes)
 app.register_blueprint(user_routes)
 app.register_blueprint(role_routes)
 app.register_blueprint(participants_routes)
+app.register_blueprint(auth_routes, url_prefix="/auth")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
