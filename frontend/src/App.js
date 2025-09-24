@@ -11,6 +11,8 @@ import RegistrarCurso from "./pages/RegistrarCurso";
 import RegistrarHorarioCurso from "./pages/RegistrarHorarioCurso";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import RegistrarAsistenciaManual from './pages/RegistrarAsistenciaManual';
+import AsignarCurso from './pages/AsignarCurso';
 
 // --- Guardas ---
 const isAuth = () => {
@@ -36,18 +38,6 @@ const AuthLayout = () => (
   // Sin sidebar; usa el fondo claro de SB Admin si quieres
   <Outlet />
 );
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './components/sidebar';
-import Dashboard from './pages/Dashboard';
-import Reconocimiento from './pages/Reconocimiento';
-import RegistrarEstudiante from './pages/RegistrarEstudiante';
-import RegistrarRol from './pages/RegistrarRol';
-import RegistrarCurso from './pages/RegistrarCurso';
-import RegistrarHorarioCurso from './pages/RegistrarHorarioCurso';
-import RegistrarAsistenciaManual from './pages/RegistrarAsistenciaManual';
-import AsignarCurso from './pages/AsignarCurso';
-
 
 
 function App() {

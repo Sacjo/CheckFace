@@ -53,6 +53,9 @@ CREATE TABLE IF NOT EXISTS attendances (
     id SERIAL PRIMARY KEY,
     participant_id INT REFERENCES participants(id) ON DELETE CASCADE,
     course_id INT REFERENCES courses(id) ON DELETE CASCADE,
-    date TIMESTAMP,
-    observations TEXT
+    date DATE NOT NULL,  -- 👈 Ahora solo guarda la fecha, no la hora
+    observations TEXT,
+
+    -- 🔒 Evita duplicados por alumno + curso + fecha
+    CONSTRAINT unique_attendance_per_day UNIQUE (participant_id, course_id, date)
 );
