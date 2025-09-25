@@ -9,7 +9,7 @@ let yaEnviado = false; // ⬅️ Se define una sola vez
 export default function CameraCapture() {
   const videoRef = useRef(null);
   const [streamStarted, setStreamStarted] = useState(false);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState([]);
   const [capturing, setCapturing] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
   const [registroConfirmado, setRegistroConfirmado] = useState(false);
@@ -17,6 +17,7 @@ export default function CameraCapture() {
   const [conteoNombres, setConteoNombres] = useState({});
   const today = new Date().toISOString().split("T")[0];
   const [cursoSeleccionado, setCursoSeleccionado] = useState("");
+  const [fueraDeCurso, setFueraDeCurso] = useState([]);
   const conteoRef = useRef({});
 
 
@@ -113,6 +114,7 @@ export default function CameraCapture() {
     setConteoNombres({});
     setRegistroConfirmado(false);
     setResult(null);
+    setFueraDeCurso([]);
 
     try {
       const res = await axios.get("http://127.0.0.1:5000/api/current_course");
@@ -176,7 +178,9 @@ export default function CameraCapture() {
 
 
             const nuevosDetalles = nuevosIds.map(ci => {
-              const match = result.find(r => r.name === ci); // r.name es el CI reconocido
+              const match = Array.isArray(result)
+                ? result.find(r => String(r.name) === String(ci))
+                : null;
               return match
                 ? { ci, full_name: match.full_name || "Desconocido" }
                 : { ci, full_name: "Desconocido" };
@@ -203,6 +207,7 @@ export default function CameraCapture() {
 
 
             const { fuera_curso } = postRes.data;
+            setFueraDeCurso(fuera_curso || []);
 
             const detallesFinales = nuevosDetalles.filter(
               p => !fuera_curso.includes(p.ci)
@@ -298,8 +303,24 @@ export default function CameraCapture() {
           </div>
         </>
       ) : (
+        capturing === false &&
+        result &&
+        yaEnviado &&
+        nombresPendientes.length === 0 &&
         <div className="alert alert-info mt-4">
           📌 Todos los estudiantes ya estaban registrados.
+        </div>
+      )}
+      {fueraDeCurso.length > 0 && (
+        <div className="alert alert-warning mt-4">
+          ⚠️ Los siguientes estudiantes fueron reconocidos pero están <strong>fuera del curso actual</strong>:
+          <ul className="list-group mt-2">
+            {fueraDeCurso.map((ci, idx) => (
+              <li key={idx} className="list-group-item">
+                CI: {ci}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

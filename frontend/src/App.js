@@ -19,8 +19,6 @@ import RegistrarEstudiante from "./pages/RegistrarEstudiante";
 import RegistrarRol from "./pages/RegistrarRol";
 import RegistrarCurso from "./pages/RegistrarCurso";
 import RegistrarHorarioCurso from "./pages/RegistrarHorarioCurso";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
 import RegistrarAsistenciaManual from './pages/RegistrarAsistenciaManual';
 import AsignarCurso from './pages/AsignarCurso';
 
@@ -85,3 +83,5 @@ function App() {
     </Router>
   );
 }
+
+export default App;
