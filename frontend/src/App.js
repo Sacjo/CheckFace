@@ -1,8 +1,18 @@
 // src/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom";
-import Sidebar from "./components/sidebar";
 
+// ⚠️ Ajusta la ruta y el nombre del archivo según exista en tu proyecto:
+//   - Si el archivo es "components/sidebar.jsx": usa la siguiente línea.
+import Sidebar from "./components/sidebar";
+//   - Si el archivo es "components/Sidebar.jsx": cambia por:
+// import Sidebar from "./components/Sidebar";
+
+// Páginas públicas
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+
+// Páginas privadas
 import Dashboard from "./pages/Dashboard";
 import Reconocimiento from "./pages/Reconocimiento";
 import RegistrarEstudiante from "./pages/RegistrarEstudiante";
@@ -14,7 +24,7 @@ import Register from "./pages/Register";
 import RegistrarAsistenciaManual from './pages/RegistrarAsistenciaManual';
 import AsignarCurso from './pages/AsignarCurso';
 
-// --- Guardas ---
+// --- Guards ---
 const isAuth = () => {
   try {
     const u = JSON.parse(localStorage.getItem("user"));
@@ -44,10 +54,10 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* raíz: envía a dashboard si autenticado; si no, a login */}
-        <Route path="/" element={isAuth() ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
+        {/* Entra por /login; si ya hay sesión, PublicOnlyRoute te manda a /dashboard */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Públicas (sin Sidebar) */}
+        {/* Rutas públicas (sin Sidebar) */}
         <Route element={<PublicOnlyRoute />}>
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
@@ -55,7 +65,7 @@ function App() {
           </Route>
         </Route>
 
-        {/* Privadas (con Sidebar) */}
+        {/* Rutas privadas (con Sidebar) */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
@@ -65,15 +75,13 @@ function App() {
             <Route path="/registrar-curso" element={<RegistrarCurso />} />
             <Route path="/registrar-horario" element={<RegistrarHorarioCurso />} />
             <Route path="/registrar-asistencia" element={<RegistrarAsistenciaManual />} />
-          <Route path="/asignar-curso" element={<AsignarCurso />} />
+            <Route path="/asignar-curso" element={<AsignarCurso />} />
           </Route>
         </Route>
 
-        {/* 404 opcional */}
-        <Route path="*" element={<Navigate to={isAuth() ? "/dashboard" : "/login"} replace />} />
+        {/* 404 → login (la guarda redirige a dashboard si estás logueado) */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
 }
-
-export default App;

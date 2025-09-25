@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// src/pages/RegistrarEstudiante.js
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import Select from 'react-select';
 
@@ -15,6 +16,7 @@ export default function RegistrarEstudiante() {
   const [courses, setCourses] = useState([]);
   const [status, setStatus] = useState(null);
 
+  // ---------- carga combos ----------
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -74,10 +76,60 @@ export default function RegistrarEstudiante() {
       setForm({ user_id: '', course_id: '', full_name: '', ci: '', occupation: '' });
       setFiles([]);
       e.target.reset();
+
+      // refrescar listado
+      await loadParticipantsUnique();
     } catch (err) {
       const msg = err.response?.data?.error || 'Error al registrar participante';
       setStatus({ type: 'danger', msg });
     }
+  };
+
+  // =====================================================
+  //  NUEVO: listado "1 fila por alumno" (participants-unique)
+  // =====================================================
+  const [participants, setParticipants] = useState([]);
+  const [loadingList, setLoadingList] = useState(false);
+
+  // Filtros (sin ocupación)
+  const [q, setQ] = useState('');
+  const [fCourseId, setFCourseId] = useState(''); // '' = todos
+
+  const loadParticipantsUnique = async () => {
+    try {
+      setLoadingList(true);
+      const params = {};
+      if (q) params.q = q;
+      if (fCourseId) params.course_id = fCourseId;
+
+      const { data } = await axios.get(
+        'http://127.0.0.1:5000/api/participants-unique',
+        { params }
+      );
+      setParticipants(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+      setParticipants([]);
+      setStatus({ type: 'danger', msg: 'Error al listar participantes.' });
+    } finally {
+      setLoadingList(false);
+    }
+  };
+
+  // cargar al entrar y cada vez que cambian filtros
+  useEffect(() => {
+    loadParticipantsUnique();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, fCourseId]);
+
+  // (opcional) filtro adicional en cliente si quieres refinar por texto
+  const filteredParticipants = useMemo(() => {
+    return participants; // ya viene filtrado desde el backend
+  }, [participants]);
+
+  const clearFilters = () => {
+    setQ('');
+    setFCourseId('');
   };
 
   return (
@@ -132,6 +184,8 @@ export default function RegistrarEstudiante() {
               />
             </div>
 
+            {/* Si ya no quieres "ocupación" en el alta, elimina este bloque.
+                Lo dejo porque lo usabas al registrar. */}
             <div className="mb-3">
               <label className="form-label">Ocupación</label>
               <select
@@ -184,6 +238,81 @@ export default function RegistrarEstudiante() {
               Registrar Participante
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* =======================
+          LISTA 1 fila por alumno
+          ======================= */}
+      <div className="card">
+        <div className="card-header">
+          <i className="fas fa-list me-1"></i> Participantes registrados
+        </div>
+        <div className="card-body">
+
+          {/* Filtros (sin ocupación) */}
+          <div className="row g-3 mb-3">
+            <div className="col-md-6 col-lg-5">
+              <label className="form-label">Buscar (Nombre o CI)</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Ej: Oscar o 123456…"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+            </div>
+            <div className="col-md-5 col-lg-4">
+              <label className="form-label">Curso</label>
+              <select
+                className="form-select"
+                value={fCourseId}
+                onChange={(e) => setFCourseId(e.target.value)}
+              >
+                <option value="">Todos</option>
+                {courses.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.career} - Sem {c.semester})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-1 d-flex align-items-end">
+              <button className="btn btn-outline-secondary w-100" onClick={clearFilters}>
+                Limpiar
+              </button>
+            </div>
+          </div>
+
+          {/* Tabla */}
+          {loadingList ? (
+            <p className="mb-0">Cargando…</p>
+          ) : filteredParticipants.length === 0 ? (
+            <p className="text-muted mb-0">No hay participantes que coincidan con los filtros.</p>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-striped table-bordered align-middle">
+                <thead>
+                  <tr>
+                    <th style={{width: 80}}>ID</th>
+                    <th>Nombre</th>
+                    <th>CI</th>
+                    <th>Curso(s)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredParticipants.map(p => (
+                    <tr key={p.id}>
+                      <td>{p.id}</td>
+                      <td>{p.full_name}</td>
+                      <td>{p.ci}</td>
+                      <td>{p.course_names || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
