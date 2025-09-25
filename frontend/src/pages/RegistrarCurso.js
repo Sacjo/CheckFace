@@ -5,6 +5,16 @@ import { Link } from "react-router-dom";
 
 const API = "http://127.0.0.1:5000/api/courses";
 
+// Opciones centralizadas para reutilizar en alta y edición
+const CAREERS = [
+  "Análisis de Sistemas",
+  "Turismo",
+  "Ingeniería Eléctrica",
+  "Ingeniería en Sistemas",
+];
+
+const SEMESTERS = Array.from({ length: 10 }, (_, i) => i + 1);
+
 export default function RegistrarCurso() {
   // Form de alta
   const [formData, setFormData] = useState({ name: "", career: "", semester: "" });
@@ -124,29 +134,43 @@ export default function RegistrarCurso() {
           <form onSubmit={onSubmit}>
             <div className="mb-3">
               <label htmlFor="name" className="form-label">Nombre del Curso</label>
-              <input id="name" name="name" className="form-control"
-                     value={formData.name} onChange={onChange} />
+              <input
+                id="name"
+                name="name"
+                className="form-control"
+                value={formData.name}
+                onChange={onChange}
+              />
             </div>
 
             <div className="mb-3">
               <label htmlFor="career" className="form-label">Carrera</label>
-              <select id="career" name="career" className="form-select"
-                      value={formData.career} onChange={onChange}>
+              <select
+                id="career"
+                name="career"
+                className="form-select"
+                value={formData.career}
+                onChange={onChange}
+              >
                 <option value="">-- Seleccionar carrera --</option>
-                <option value="Análisis de Sistemas">Análisis de Sistemas</option>
-                <option value="Turismo">Turismo</option>
-                <option value="Ingeniería Eléctrica">Ingeniería Eléctrica</option>
-                <option value="Ingeniería en Sistemas">Ingeniería en Sistemas</option>
+                {CAREERS.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
             </div>
 
             <div className="mb-3">
               <label htmlFor="semester" className="form-label">Semestre</label>
-              <select id="semester" name="semester" className="form-select"
-                      value={formData.semester} onChange={onChange}>
+              <select
+                id="semester"
+                name="semester"
+                className="form-select"
+                value={formData.semester}
+                onChange={onChange}
+              >
                 <option value="">-- Seleccionar semestre --</option>
-                {[...Array(10)].map((_, i) => (
-                  <option key={i + 1} value={i + 1}>{i + 1}</option>
+                {SEMESTERS.map((s) => (
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </div>
@@ -214,26 +238,49 @@ export default function RegistrarCurso() {
                 <div className="modal-body">
                   <div className="mb-3">
                     <label className="form-label">Nombre</label>
-                    <input className="form-control" value={eName} onChange={(e) => setEName(e.target.value)} />
+                    <input
+                      className="form-control"
+                      value={eName}
+                      onChange={(e) => setEName(e.target.value)}
+                    />
                   </div>
+
                   <div className="mb-3">
                     <label className="form-label">Carrera</label>
-                    <input className="form-control" value={eCareer} onChange={(e) => setECareer(e.target.value)} />
+                    {/* Select en lugar de input: solo lista opciones */}
+                    <select
+                      className="form-select"
+                      value={eCareer}
+                      onChange={(e) => setECareer(e.target.value)}
+                    >
+                      <option value="">-- Seleccionar carrera --</option>
+                      {CAREERS.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
                   </div>
+
                   <div className="mb-3">
                     <label className="form-label">Semestre</label>
-                    <select className="form-select" value={eSemester} onChange={(e) => setESemester(e.target.value)}>
+                    <select
+                      className="form-select"
+                      value={eSemester}
+                      onChange={(e) => setESemester(e.target.value)}
+                    >
                       <option value="">-- Seleccionar semestre --</option>
-                      {[...Array(10)].map((_, i) => (
-                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                      {SEMESTERS.map((s) => (
+                        <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
                   </div>
                 </div>
                 <div className="modal-footer">
                   <button className="btn btn-secondary" onClick={closeEdit}>Cancelar</button>
-                  <button className="btn btn-primary" onClick={saveEdit}
-                          disabled={!eName.trim() || !eCareer.trim() || !eSemester.trim()}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={saveEdit}
+                    disabled={!eName.trim() || !eCareer.trim() || !eSemester.trim()}
+                  >
                     Guardar cambios
                   </button>
                 </div>
