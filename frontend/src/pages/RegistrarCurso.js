@@ -32,13 +32,47 @@ export default function RegistrarCurso() {
   // ---- helpers ----
   const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
+  // Centralizamos la traducción de errores del backend
+  const extractError = (err, fallback = "Ocurrió un error. Intenta de nuevo.") => {
+    const data = err?.response?.data;
+    const status = err?.response?.status;
+
+    // Si el backend envía códigos (recomendado)
+    const code = data?.code;
+
+    // Duplicado (409)
+    if (status === 409 || code === "COURSE_DUPLICATE") {
+      // Mensaje estándar para duplicados (ajústalo si tu backend envía otro texto)
+      return "Ya existe un curso con esos datos. Cambia nombre/carrera/semestre.";
+    }
+
+    // Si el backend envía message o error, priorizarlos
+    if (typeof data?.message === "string" && data.message.trim()) return data.message;
+    if (typeof data?.error === "string" && data.error.trim()) return data.error;
+
+    return fallback;
+  };
+
+  const showStatus = (type, msg) => {
+    setStatus({ type, msg });
+    // Llevar la vista arriba para que el usuario vea la alerta
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Autocierre de la alerta
+  useEffect(() => {
+    if (!status) return;
+    const t = setTimeout(() => setStatus(null), 4000);
+    return () => clearTimeout(t);
+  }, [status]);
+
   const loadCourses = async () => {
     try {
       setLoading(true);
       const { data } = await axios.get(API);
       setCourses(Array.isArray(data) ? data : []);
     } catch {
-      setStatus({ type: "danger", msg: "No se pudo cargar la lista de cursos." });
+      showStatus("danger", "No se pudo cargar la lista de cursos.");
     } finally {
       setLoading(false);
     }
@@ -53,7 +87,7 @@ export default function RegistrarCurso() {
 
     const { name, career, semester } = formData;
     if (!name.trim() || !career.trim() || !semester.trim()) {
-      setStatus({ type: "danger", msg: "Todos los campos son obligatorios." });
+      showStatus("danger", "Todos los campos son obligatorios.");
       return;
     }
 
@@ -63,12 +97,12 @@ export default function RegistrarCurso() {
         { name: name.trim(), career: career.trim(), semester: parseInt(semester, 10) },
         { headers: { "Content-Type": "application/json" } }
       );
-      setStatus({ type: "success", msg: "Curso registrado correctamente." });
+      showStatus("success", "Curso registrado correctamente.");
       setFormData({ name: "", career: "", semester: "" });
       loadCourses();
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.response?.data?.error || "Error al registrar el curso.";
-      setStatus({ type: "danger", msg });
+      const msg = extractError(err, "Error al registrar el curso.");
+      showStatus("danger", msg);
     }
   };
 
@@ -78,11 +112,11 @@ export default function RegistrarCurso() {
     setStatus(null);
     try {
       await axios.delete(`${API}/${id}`);
-      setStatus({ type: "success", msg: "Curso eliminado correctamente." });
+      showStatus("success", "Curso eliminado correctamente.");
       loadCourses();
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.response?.data?.error || "Error al eliminar el curso.";
-      setStatus({ type: "danger", msg });
+      const msg = extractError(err, "Error al eliminar el curso.");
+      showStatus("danger", msg);
     }
   };
 
@@ -98,7 +132,7 @@ export default function RegistrarCurso() {
   const saveEdit = async () => {
     if (!editing) return;
     if (!eName.trim() || !eCareer.trim() || !eSemester.trim()) {
-      setStatus({ type: "danger", msg: "Todos los campos son obligatorios." });
+      showStatus("danger", "Todos los campos son obligatorios.");
       return;
     }
     try {
@@ -107,12 +141,12 @@ export default function RegistrarCurso() {
         { name: eName.trim(), career: eCareer.trim(), semester: parseInt(eSemester, 10) },
         { headers: { "Content-Type": "application/json" } }
       );
-      setStatus({ type: "success", msg: "Curso actualizado correctamente." });
+      showStatus("success", "Curso actualizado correctamente.");
       setEditing(null);
       loadCourses();
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.response?.data?.error || "Error al actualizar el curso.";
-      setStatus({ type: "danger", msg });
+      const msg = extractError(err, "Error al actualizar el curso.");
+      showStatus("danger", msg);
     }
   };
 

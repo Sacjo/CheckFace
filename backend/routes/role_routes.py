@@ -127,3 +127,27 @@ def delete_role(role_id):
     except Exception as e:
         print("❌ Error al eliminar rol:", e)
         return jsonify({"success": False, "error": str(e)}), 500
+    
+    
+    
+    
+
+# Verificar si ya existe un rol con esa descripción (case-insensitive por CITEXT)
+@role_routes.route("/api/roles/exists", methods=["GET"])
+def role_exists():
+    description = request.args.get("description", "")
+    if not description:
+        return jsonify({"success": False, "message": "Parámetro 'description' requerido"}), 400
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        # Con CITEXT, '=' ya es insensible a mayúsculas/minúsculas
+        cursor.execute("SELECT 1 FROM roles WHERE description = %s LIMIT 1", (description,))
+        exists = cursor.fetchone() is not None
+        cursor.close()
+        conn.close()
+        return jsonify({"success": True, "exists": exists}), 200
+    except Exception as e:
+        print("❌ Error en /api/roles/exists:", e)
+        return jsonify({"success": False, "error": str(e)}), 500

@@ -2,10 +2,16 @@
 SET search_path TO public;
 
 -- Table: roles
+-- habilitar la extensión citext (una sola vez en la BD)
+CREATE EXTENSION IF NOT EXISTS citext;
+
+-- crear tabla con constraint UNIQUE case-insensitive
+-- No permite roles duplicados como 'Admin' y 'admin',
 CREATE TABLE IF NOT EXISTS roles (
     id SERIAL PRIMARY KEY,
-    description VARCHAR(120) NOT NULL
+    description CITEXT NOT NULL UNIQUE
 );
+
 
 -- Table: users
 CREATE TABLE IF NOT EXISTS users (
