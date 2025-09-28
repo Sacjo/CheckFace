@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS roles (
     description CITEXT NOT NULL UNIQUE
 );
 
+INSERT INTO roles(description) Values('admin') ON CONFLICT DO NOTHING;
+
 
 -- Table: users
 CREATE TABLE IF NOT EXISTS users (

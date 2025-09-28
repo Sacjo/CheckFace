@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 
 # Cargar modelo una sola vez
-model = YOLO("backend/detection/model-weights/yolov8n-face.pt")
+model = YOLO("detection/model-weights/yolov8n-face.pt")
 
 def detect_faces(frame):
     results = model.predict(source=frame, conf=0.5, verbose=False)[0]
